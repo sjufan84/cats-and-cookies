@@ -4,10 +4,10 @@ export default function AboutPage() {
       <h1 className="text-3xl font-bold text-center">Our Story</h1>
       <div className="mt-8 text-lg max-w-3xl mx-auto">
         <p>
-          Welcome to Cats and Cookies! My name is Sage, and I'm the baker behind all the delicious treats you'll find here.
+          Welcome to Cats and Cookies! My name is Sage, and I&apos;m the baker behind all the delicious treats you&apos;ll find here.
         </p>
         <p className="mt-4">
-          I started this little bakery with my two best friends and official mascots, Teddy and Millie. They are my fluffy Maine Coon cats who are always by my side, especially when I'm baking. Teddy, the gentle gray giant, is our quality control expert (he loves the smells!). Millie, our playful orange girl, provides the creative inspiration.
+          I started this little bakery with my two best friends and official mascots, Teddy and Millie. They are my fluffy Maine Coon cats who are always by my side, especially when I&apos;m baking. Teddy, the gentle gray giant, is our quality control expert (he loves the smells!). Millie, our playful orange girl, provides the creative inspiration.
         </p>
         <p className="mt-4">
           Baking has always been my passion, and I love sharing my creations with everyone. I hope you enjoy my cookies as much as I enjoy making them (and as much as Teddy and Millie enjoy supervising!).
