@@ -6,6 +6,7 @@ import Footer from "@/components/custom/Footer";
 import { CartProvider } from "@/lib/cart-context";
 import { WishlistProvider } from "@/lib/wishlist-context";
 import { StripeProvider } from "@/lib/stripe-provider";
+import { ThemeProvider } from "@/components/theme-provider"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,19 +29,26 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-pink-50/50`}
       >
-        <StripeProvider>
-          <CartProvider>
-            <WishlistProvider>
-              <Header />
-              <main>{children}</main>
-              <Footer />
-            </WishlistProvider>
-          </CartProvider>
-        </StripeProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <StripeProvider>
+            <CartProvider>
+              <WishlistProvider>
+                <Header />
+                <main>{children}</main>
+                <Footer />
+              </WishlistProvider>
+            </CartProvider>
+          </StripeProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

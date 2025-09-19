@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ShoppingCart, Menu, Heart } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 import { useWishlist } from "@/lib/wishlist-context";
+// import { ModeToggle } from "@/components/themes/ModeToggle";
 import CartSidebar from "./CartSidebar";
 
 export default function Header() {
@@ -64,6 +65,9 @@ export default function Header() {
                 </span>
               )}
             </button>
+
+            {/* Theme Toggle */}
+            {/* <ModeToggle /> */}
 
             {/* Admin Link */}
             <Link href="/admin" className="hidden sm:block text-sm text-gray-500 hover:text-pink-500 transition-colors">
