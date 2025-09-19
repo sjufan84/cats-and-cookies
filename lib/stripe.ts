@@ -10,6 +10,6 @@ if (!stripeSecretKey) {
 }
 
 export const stripe = new Stripe(stripeSecretKey, {
-  apiVersion: '2024-04-10', // Use the latest API version
+  apiVersion: '2025-08-27.basil', // Use the latest API version
   typescript: true,
 });

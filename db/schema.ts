@@ -37,6 +37,30 @@ export const products = pgTable("products", {
   imageUrl: text("image_url"),
   isFeatured: boolean("is_featured").default(false).notNull(),
   isAvailable: boolean("is_available").default(true).notNull(),
+  // Stripe integration fields
+  stripeProductId: text("stripe_product_id").unique(),
+  stripePriceId: text("stripe_price_id").unique(),
+  stripeLastSynced: timestamp("stripe_last_synced"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+/**
+ * CUSTOMERS
+ * This table stores customer information for better integration with Stripe.
+ */
+export const customers = pgTable("customers", {
+  id: serial("id").primaryKey(),
+  stripeCustomerId: text("stripe_customer_id").unique().notNull(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  name: varchar("name", { length: 255 }),
+  phone: varchar("phone", { length: 50 }),
+  // Customer preferences and metadata
+  preferences: text("preferences"), // JSON string for storing preferences
+  totalOrders: integer("total_orders").default(0).notNull(),
+  totalSpent: decimal("total_spent", { precision: 10, scale: 2 }).default("0").notNull(),
+  lastOrderDate: timestamp("last_order_date"),
+  isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -51,9 +75,10 @@ export const orders = pgTable("orders", {
   customerEmail: varchar("customer_email", { length: 255 }).notNull(),
   totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
   stripePaymentIntentId: text("stripe_payment_intent_id").unique(),
+  stripeCustomerId: text("stripe_customer_id"),
   status: varchar("status", {
     length: 50,
-    enum: ["pending", "paid", "shipped", "delivered", "canceled"],
+    enum: ["pending", "paid", "shipped", "delivered", "canceled", "refunded", "disputed"],
   })
     .default("pending")
     .notNull(),
@@ -86,7 +111,15 @@ export const orderItems = pgTable(
 // RELATIONS
 // Defining relations for easier querying of related data.
 
-export const orderRelations = relations(orders, ({ many }) => ({
+export const customerRelations = relations(customers, ({ many }) => ({
+  orders: many(orders),
+}));
+
+export const orderRelations = relations(orders, ({ one, many }) => ({
+  customer: one(customers, {
+    fields: [orders.stripeCustomerId],
+    references: [customers.stripeCustomerId],
+  }),
   orderItems: many(orderItems),
 }));
 
