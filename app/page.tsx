@@ -5,7 +5,7 @@ interface Product {
   id: number;
   name: string;
   description: string;
-  price: string;
+  basePrice: string;
   imageUrl: string | null;
   isFeatured: boolean;
   isAvailable: boolean;
@@ -53,7 +53,7 @@ export default async function Home() {
               key={product.id}
               id={product.id}
               name={product.name}
-              price={`$${parseFloat(product.price).toFixed(2)}`}
+              basePrice={product.basePrice}
               imageUrl={product.imageUrl || ''}
               isFeatured={product.isFeatured}
             />

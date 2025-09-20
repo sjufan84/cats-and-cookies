@@ -5,6 +5,7 @@ import { useCart } from "@/lib/cart-context";
 import { X, Plus, Minus, ShoppingBag, Trash2 } from "lucide-react";
 import Link from "next/link";
 import OptimizedImage from "./OptimizedImage";
+import { formatPrice, calculateItemTotal } from "@/lib/price-utils";
 
 interface CartSidebarProps {
   isOpen: boolean;
@@ -23,13 +24,6 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
     }, 300);
   };
 
-  const formatPrice = (price: string) => {
-    return `$${parseFloat(price).toFixed(2)}`;
-  };
-
-  const calculateItemTotal = (price: string, quantity: number) => {
-    return (parseFloat(price) * quantity).toFixed(2);
-  };
 
   return (
     <>

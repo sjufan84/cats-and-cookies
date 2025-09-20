@@ -4,14 +4,21 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
+import { formatPrice, calculateItemTotal } from "@/lib/price-utils";
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
+import StripePaymentForm from '@/components/custom/StripePaymentForm';
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+
 export default function CheckoutPage() {
   const { state } = useCart();
   const [isLoading, setIsLoading] = useState(false);
-  const [checkoutType, setCheckoutType] = useState<'redirect' | 'embedded'>('redirect');
   const [customerInfo, setCustomerInfo] = useState({
     name: "",
     email: "",
   });
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCustomerInfo({
@@ -53,43 +60,16 @@ export default function CheckoutPage() {
     }
   };
 
-  const handleEmbeddedCheckout = async () => {
-    if (!customerInfo.name || !customerInfo.email) {
-      alert('Please fill in all required fields');
-      return;
-    }
+  const handlePaymentSuccess = () => {
+    setPaymentSuccess(true);
+    // Redirect to success page after a short delay
+    setTimeout(() => {
+      window.location.href = '/checkout/success';
+    }, 2000);
+  };
 
-    setIsLoading(true);
-    try {
-      // For embedded checkout, we'll use the same API but handle it differently
-      const response = await fetch("/api/create-checkout-session", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          items: state.items,
-          customerEmail: customerInfo.email,
-          customerName: customerInfo.name,
-        }),
-      });
-
-      const { clientSecret } = await response.json();
-
-      if (clientSecret) {
-        // For now, we'll redirect to the embedded checkout
-        // In a full implementation, you'd use Stripe Elements here
-        alert('Embedded checkout would open here. For now, using redirect method.');
-        // You could implement a modal or embedded form here
-      } else {
-        throw new Error("Failed to create checkout session");
-      }
-    } catch (error) {
-      console.error('Embedded checkout error:', error);
-      alert('There was an error processing your order. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+  const handlePaymentError = (error: string) => {
+    alert(`Payment failed: ${error}`);
   };
 
   if (state.items.length === 0) {
@@ -120,78 +100,76 @@ export default function CheckoutPage() {
         <div>
           <h2 className="text-2xl font-bold mb-6">Customer Information</h2>
           
-          {/* Checkout Type Selection */}
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-3">Choose Checkout Method</h3>
-            <div className="flex space-x-4">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="checkoutType"
-                  value="redirect"
-                  checked={checkoutType === 'redirect'}
-                  onChange={(e) => setCheckoutType(e.target.value as 'redirect' | 'embedded')}
-                  className="mr-2"
-                />
-                <span>Redirect to Stripe (Recommended)</span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="checkoutType"
-                  value="embedded"
-                  checked={checkoutType === 'embedded'}
-                  onChange={(e) => setCheckoutType(e.target.value as 'redirect' | 'embedded')}
-                  className="mr-2"
-                />
-                <span>Embedded Checkout</span>
-              </label>
+          {paymentSuccess ? (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+              <div className="text-green-600 text-4xl mb-2">✅</div>
+              <h3 className="text-lg font-semibold text-green-800 mb-2">Payment Successful!</h3>
+              <p className="text-green-600">Redirecting to confirmation page...</p>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Customer Details */}
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    required
+                    value={customerInfo.name}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                    placeholder="Enter your full name"
+                  />
+                </div>
 
-          <form onSubmit={checkoutType === 'redirect' ? handleRedirectCheckout : (e) => { e.preventDefault(); handleEmbeddedCheckout(); }} className="space-y-6">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                Full Name *
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                required
-                value={customerInfo.name}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                placeholder="Enter your full name"
-              />
-            </div>
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                    Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    required
+                    value={customerInfo.email}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                    placeholder="Enter your email address"
+                  />
+                </div>
+              </div>
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email Address *
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                required
-                value={customerInfo.email}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                placeholder="Enter your email address"
-              />
-            </div>
+              {/* Payment Methods */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Payment Method</h3>
+                
+                {/* Stripe Elements */}
+                <Elements stripe={stripePromise}>
+                  <StripePaymentForm
+                    customerInfo={customerInfo}
+                    onSuccess={handlePaymentSuccess}
+                    onError={handlePaymentError}
+                  />
+                </Elements>
 
-            <div className="pt-4">
-              <button
-                type="submit"
-                disabled={isLoading || !customerInfo.name || !customerInfo.email}
-                className="w-full bg-pink-500 text-white px-6 py-3 rounded-lg hover:bg-pink-600 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium"
-              >
-                {isLoading ? "Processing..." : `Pay $${state.total.toFixed(2)} ${checkoutType === 'redirect' ? '(Redirect)' : '(Embedded)'}`}
-              </button>
+                {/* Alternative: Redirect to Stripe Checkout */}
+                <div className="text-center">
+                  <div className="text-sm text-gray-500 mb-2">or</div>
+                  <button
+                    onClick={handleRedirectCheckout}
+                    disabled={isLoading || !customerInfo.name || !customerInfo.email}
+                    className="w-full bg-gray-100 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-200 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium"
+                  >
+                    {isLoading ? "Processing..." : "Pay with Stripe Checkout (Redirect)"}
+                  </button>
+                </div>
+              </div>
             </div>
-          </form>
+          )}
         </div>
 
         {/* Order Summary */}
@@ -218,12 +196,12 @@ export default function CheckoutPage() {
                   <div className="flex-1">
                     <h3 className="font-medium">{item.name}</h3>
                     <p className="text-sm text-gray-600">
-                      ${parseFloat(item.price).toFixed(2)} × {item.quantity}
+                      {formatPrice(item.price)} × {item.quantity}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="font-medium">
-                      ${(parseFloat(item.price) * item.quantity).toFixed(2)}
+                      {formatPrice(calculateItemTotal(item.price, item.quantity))}
                     </p>
                   </div>
                 </div>
@@ -233,7 +211,7 @@ export default function CheckoutPage() {
             <div className="mt-6 border-t pt-4">
               <div className="flex justify-between items-center text-lg font-bold">
                 <span>Total:</span>
-                <span className="text-pink-500">${state.total.toFixed(2)}</span>
+                <span className="text-pink-500">{formatPrice(state.total)}</span>
               </div>
             </div>
 

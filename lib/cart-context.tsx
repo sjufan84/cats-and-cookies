@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { calculateCartTotal } from './price-utils';
 
 interface CartItem {
   id: number;
@@ -113,7 +114,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
 }
 
 function calculateTotal(items: CartItem[]): number {
-  return items.reduce((total, item) => total + parseFloat(item.price) * item.quantity, 0);
+  return calculateCartTotal(items);
 }
 
 interface CartContextType {

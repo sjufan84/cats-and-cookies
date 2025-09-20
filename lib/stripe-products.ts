@@ -50,7 +50,7 @@ export class StripeProductManager {
           const existingStripePrice = await stripe.prices.retrieve(dbProduct.stripePriceId);
 
           // Check if price needs updating
-          const currentPriceInCents = Math.round(parseFloat(dbProduct.price) * 100);
+          const currentPriceInCents = Math.round(parseFloat(dbProduct.basePrice) * 100);
           if (existingStripePrice.unit_amount !== currentPriceInCents) {
             // Create new price (Stripe prices are immutable)
             const newStripePrice = await stripe.prices.create({
@@ -102,7 +102,7 @@ export class StripeProductManager {
       // Create price for the product
       const stripePrice = await stripe.prices.create({
         product: stripeProduct.id,
-        unit_amount: Math.round(parseFloat(dbProduct.price) * 100),
+        unit_amount: Math.round(parseFloat(dbProduct.basePrice) * 100),
         currency: 'usd'
       });
 
@@ -147,10 +147,10 @@ export class StripeProductManager {
         const batch = dbProducts.slice(i, i + batchSize);
         
         const batchPromises = batch.map(async (product) => {
-          try {
+        try {
             return await this.syncProduct(product.id, options);
-          } catch (error) {
-            console.error(`Failed to sync product ${product.id}:`, error);
+        } catch (error) {
+          console.error(`Failed to sync product ${product.id}:`, error);
             return null;
           }
         });
@@ -263,7 +263,6 @@ export class StripeProductManager {
 
       // Create checkout session with customer info
       const sessionParams: any = {
-        customer_email: customerInfo.email,
         payment_method_types: ['card'],
         line_items: lineItems,
         mode: 'payment',
@@ -283,9 +282,11 @@ export class StripeProductManager {
         },
       };
 
-      // Add customer ID if available
+      // Add customer info - use customer ID if available, otherwise use email
       if (customerInfo.customerId) {
         sessionParams.customer = customerInfo.customerId;
+      } else {
+        sessionParams.customer_email = customerInfo.email;
       }
 
       const session = await stripe.checkout.sessions.create(sessionParams);
@@ -325,7 +326,7 @@ export class StripeProductManager {
       });
 
       // Check if price needs updating
-      const currentPriceInCents = Math.round(parseFloat(dbProduct.price) * 100);
+      const currentPriceInCents = Math.round(parseFloat(dbProduct.basePrice) * 100);
       let newPriceId = dbProduct.stripePriceId;
 
       if (dbProduct.stripePriceId) {

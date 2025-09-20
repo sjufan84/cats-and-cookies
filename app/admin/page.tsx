@@ -9,7 +9,7 @@ interface Product {
   id: number;
   name: string;
   description: string;
-  price: string;
+  basePrice: string;
   imageUrl: string | null;
   isFeatured: boolean;
   isAvailable: boolean;
@@ -264,7 +264,7 @@ export default function AdminPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ${parseFloat(product.price).toFixed(2)}
+                      ${parseFloat(product.basePrice).toFixed(2)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex space-x-2">

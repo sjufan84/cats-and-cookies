@@ -10,6 +10,12 @@
 !.yarn/releases
 !.yarn/versions
 
+# google cloud storage
+/cats-and-cookies-472620-89103b33c46b.json
+*-service-account-key.json
+*-credentials.json
+/keys
+
 # testing
 /coverage
 

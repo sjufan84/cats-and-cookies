@@ -22,6 +22,20 @@
       "when": 1758263922784,
       "tag": "0002_sparkling_toro",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1758317875762,
+      "tag": "0003_previous_trauma",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1758325461506,
+      "tag": "0004_lyrical_hellfire_club",
+      "breakpoints": true
     }
   ]
 }

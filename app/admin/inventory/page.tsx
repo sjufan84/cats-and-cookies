@@ -8,7 +8,7 @@ interface Product {
   id: number;
   name: string;
   description: string;
-  price: number;
+  basePrice: string;
   isAvailable: boolean;
   category: string;
   imageUrl?: string;
@@ -256,7 +256,7 @@ export default function InventoryPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {formatCurrency(product.price)}
+                      {formatCurrency(parseFloat(product.basePrice))}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {product.category}

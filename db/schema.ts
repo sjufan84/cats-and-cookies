@@ -33,14 +33,39 @@ export const products = pgTable("products", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description").notNull(),
-  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  basePrice: decimal("base_price", { precision: 10, scale: 2 }).notNull(), // Price per individual unit
   imageUrl: text("image_url"),
   isFeatured: boolean("is_featured").default(false).notNull(),
   isAvailable: boolean("is_available").default(true).notNull(),
+  // Additional product fields
+  category: varchar("category", { length: 100 }).default("cookies").notNull(),
+  ingredients: text("ingredients"),
+  allergens: text("allergens"),
+  // Unit system fields
+  unitType: varchar("unit_type", { length: 50 }).default("individual").notNull(), // individual, dozen, half_dozen, etc.
+  minQuantity: integer("min_quantity").default(1).notNull(),
+  maxQuantity: integer("max_quantity").default(100).notNull(),
   // Stripe integration fields
   stripeProductId: text("stripe_product_id").unique(),
   stripePriceId: text("stripe_price_id").unique(),
   stripeLastSynced: timestamp("stripe_last_synced"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+/**
+ * PRODUCT UNITS
+ * This table stores different unit options for products (individual, half dozen, dozen, etc.)
+ */
+export const productUnits = pgTable("product_units", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 100 }).notNull(), // "Individual", "Half Dozen", "Dozen", etc.
+  quantity: integer("quantity").notNull(), // 1, 6, 12, etc.
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(), // Price for this unit
+  isDefault: boolean("is_default").default(false).notNull(),
+  isAvailable: boolean("is_available").default(true).notNull(),
+  sortOrder: integer("sort_order").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -115,15 +140,23 @@ export const customerRelations = relations(customers, ({ many }) => ({
   orders: many(orders),
 }));
 
+export const productRelations = relations(products, ({ many }) => ({
+  units: many(productUnits),
+  orderItems: many(orderItems),
+}));
+
+export const productUnitRelations = relations(productUnits, ({ one }) => ({
+  product: one(products, {
+    fields: [productUnits.productId],
+    references: [products.id],
+  }),
+}));
+
 export const orderRelations = relations(orders, ({ one, many }) => ({
   customer: one(customers, {
     fields: [orders.stripeCustomerId],
     references: [customers.stripeCustomerId],
   }),
-  orderItems: many(orderItems),
-}));
-
-export const productRelations = relations(products, ({ many }) => ({
   orderItems: many(orderItems),
 }));
 

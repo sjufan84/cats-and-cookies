@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { products } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { StripeProductManager } from '@/lib/stripe-products';
 
 export async function GET() {
   try {
@@ -15,23 +16,80 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { name, description, price, imageUrl, isFeatured } = body;
+    const formData = await request.formData();
+    
+    // Extract form fields
+    const name = formData.get('name') as string;
+    const description = formData.get('description') as string;
+    const price = formData.get('price') as string;
+    const isFeatured = formData.get('isFeatured') === 'true';
+    const isAvailable = formData.get('isAvailable') === 'true';
+    const category = formData.get('category') as string;
+    const ingredients = formData.get('ingredients') as string;
+    const allergens = formData.get('allergens') as string;
+    const imageFiles = formData.getAll('images') as File[];
 
+    // Validate required fields
     if (!name || !description || !price) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    if (!imageFiles || imageFiles.length === 0) {
+      return NextResponse.json({ error: 'At least one image is required' }, { status: 400 });
+    }
+
+    // Upload images to Google Cloud Storage
+    const uploadFormData = new FormData();
+    imageFiles.forEach(file => {
+      uploadFormData.append('files', file);
+    });
+
+    const uploadResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/upload`, {
+      method: 'POST',
+      body: uploadFormData,
+    });
+
+    if (!uploadResponse.ok) {
+      const uploadError = await uploadResponse.json();
+      return NextResponse.json({ error: `Failed to upload images: ${uploadError.error}` }, { status: 500 });
+    }
+
+    const { urls } = await uploadResponse.json();
+    const primaryImageUrl = urls[0]; // Use first image as primary
+
+    // Create product in database
     const newProduct = await db.insert(products).values({
       name,
       description,
-      price: price.toString(),
-      imageUrl,
+      basePrice: price.toString(),
+      imageUrl: primaryImageUrl,
       isFeatured: isFeatured || false,
-      isAvailable: true,
+      isAvailable: isAvailable !== false,
+      category: category || 'cookies',
+      ingredients: ingredients || '',
+      allergens: allergens || '',
+      unitType: 'individual',
+      minQuantity: 1,
+      maxQuantity: 100,
     }).returning();
 
-    return NextResponse.json(newProduct[0], { status: 201 });
+    // Sync with Stripe
+    try {
+      await StripeProductManager.syncProduct(newProduct[0].id, {
+        forceUpdate: true
+      });
+    } catch (stripeError) {
+      console.error('Failed to sync with Stripe:', stripeError);
+      // Don't fail the entire operation if Stripe sync fails
+      // The product is still created in the database
+    }
+
+    return NextResponse.json({
+      ...newProduct[0],
+      uploadedImages: urls,
+      message: 'Product created successfully and synced with Stripe'
+    }, { status: 201 });
+
   } catch (error) {
     console.error('Error creating product:', error);
     return NextResponse.json({ error: 'Failed to create product' }, { status: 500 });

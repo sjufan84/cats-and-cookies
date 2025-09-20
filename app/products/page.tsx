@@ -9,7 +9,7 @@ interface Product {
   id: number;
   name: string;
   description: string;
-  price: string;
+  basePrice: string;
   imageUrl: string | null;
   category: string;
   isAvailable: boolean;
@@ -69,7 +69,7 @@ export default function ProductsPage() {
 
     // Price range filter
     filtered = filtered.filter(product => {
-      const price = parseFloat(product.price);
+      const price = parseFloat(product.basePrice);
       return price >= filters.priceRange[0] && price <= filters.priceRange[1];
     });
 
@@ -91,9 +91,9 @@ export default function ProductsPage() {
         case 'name-desc':
           return b.name.localeCompare(a.name);
         case 'price':
-          return parseFloat(a.price) - parseFloat(b.price);
+          return parseFloat(a.basePrice) - parseFloat(b.basePrice);
         case 'price-desc':
-          return parseFloat(b.price) - parseFloat(a.price);
+          return parseFloat(b.basePrice) - parseFloat(a.basePrice);
         case 'featured':
           if (a.isFeatured && !b.isFeatured) return -1;
           if (!a.isFeatured && b.isFeatured) return 1;
@@ -189,7 +189,7 @@ export default function ProductsPage() {
                 key={product.id}
                 id={product.id}
                 name={product.name}
-                price={`$${parseFloat(product.price).toFixed(2)}`}
+                basePrice={product.basePrice}
                 imageUrl={product.imageUrl || ''}
                 isFeatured={product.isFeatured}
               />
