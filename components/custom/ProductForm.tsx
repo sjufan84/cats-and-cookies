@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { X, Image as ImageIcon, Plus, ChefHat, Sparkles, Upload, Edit3, CheckCircle } from 'lucide-react';
+import { X, Image as ImageIcon, Plus, ChefHat, Sparkles, Upload, Edit3, CheckCircle, Eye } from 'lucide-react';
 import { ExtractedRecipe } from '@/schemas/recipeSchemas';
 import RecipeDialog from './RecipeDialog';
 
@@ -541,10 +541,10 @@ export default function ProductForm({ productId, initialData }: ProductFormProps
                         <button
                           type="button"
                           onClick={() => setShowRecipeDialog(true)}
-                          className="text-sm bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2"
+                          className="text-sm bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2"
                         >
-                          <Edit3 className="h-4 w-4" />
-                          Edit Recipe
+                          <Eye className="h-4 w-4" />
+                          View
                         </button>
                         <button
                           type="button"

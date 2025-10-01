@@ -20,11 +20,9 @@ import {
   AlertTriangle,
   Edit3,
   Save,
-  X,
   Plus,
   Trash2,
   Flame,
-  Wheat,
   Check
 } from 'lucide-react';
 
