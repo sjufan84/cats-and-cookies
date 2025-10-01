@@ -5,7 +5,8 @@
       "Bash(npx drizzle-kit generate:*)",
       "Bash(npm install:*)",
       "Bash(npm run build:*)",
-      "mcp__stripe__get_stripe_account_info"
+      "mcp__stripe__get_stripe_account_info",
+      "Bash(npm run lint:*)"
     ],
     "deny": [],
     "ask": []

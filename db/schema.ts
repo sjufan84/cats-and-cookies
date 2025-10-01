@@ -49,6 +49,8 @@ export const products = pgTable("products", {
   stripeProductId: text("stripe_product_id").unique(),
   stripePriceId: text("stripe_price_id").unique(),
   stripeLastSynced: timestamp("stripe_last_synced"),
+  // Recipe data (JSON field for structured recipe information)
+  recipeData: text("recipe_data"), // JSON string of RecipeData
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

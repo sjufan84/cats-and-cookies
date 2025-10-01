@@ -45,7 +45,7 @@ export default function AdminPage() {
 
       if (productsRes.ok) {
         const productsData = await productsRes.json();
-        setProducts(productsData);
+        setProducts(productsData.products || []);
       }
 
       if (ordersRes.ok) {

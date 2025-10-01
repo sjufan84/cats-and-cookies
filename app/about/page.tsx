@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export default function AboutPage() {
   return (
     <main className="container mx-auto px-4 py-8">
@@ -13,13 +15,29 @@ export default function AboutPage() {
           Baking has always been my passion, and I love sharing my creations with everyone. I hope you enjoy my cookies as much as I enjoy making them (and as much as Teddy and Millie enjoy supervising!).
         </p>
         <div className="flex justify-center mt-8 space-x-8">
-            {/* Placeholder for cat images */}
+            {/* Cat images */}
             <div className="text-center">
-                <div className="bg-gray-200 h-48 w-48 rounded-full mx-auto"></div>
+                <div className="bg-gray-200 h-48 w-48 rounded-full mx-auto relative overflow-hidden">
+                    <Image 
+                        src="/teddyCropped.jpeg" 
+                        alt="Teddy" 
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 192px, (max-width: 1200px) 192px, 192px"
+                    />
+                </div>
                 <p className="mt-2 font-bold">Teddy</p>
             </div>
             <div className="text-center">
-                <div className="bg-gray-200 h-48 w-48 rounded-full mx-auto"></div>
+                <div className="bg-gray-200 h-48 w-48 rounded-full mx-auto relative overflow-hidden">
+                    <Image 
+                        src="/millieProfile.jpeg" 
+                        alt="Millie" 
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 192px, (max-width: 1200px) 192px, 192px"
+                    />
+                </div>
                 <p className="mt-2 font-bold">Millie</p>
             </div>
         </div>

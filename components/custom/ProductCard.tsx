@@ -86,9 +86,9 @@ export default function ProductCard({ id, name, basePrice, imageUrl, isFeatured 
           <div className="relative h-64 w-full overflow-hidden">
             {imageUrl && imageUrl.trim() ? (
               <OptimizedImage
-              src={imageUrl}
-              alt={name}
-              fill
+                src={imageUrl}
+                alt={name}
+                fill
                 className="object-cover group-hover:scale-105 transition-transform duration-300"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                 priority={isFeatured}

@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { products } from '@/db/schema';
+import { products, productUnits } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { StripeProductManager } from '@/lib/stripe-products';
 
 export async function GET() {
   try {
     const allProducts = await db.select().from(products).where(eq(products.isAvailable, true));
-    return NextResponse.json(allProducts);
+    return NextResponse.json({ products: allProducts });
   } catch (error) {
     console.error('Error fetching products:', error);
     return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
@@ -21,16 +21,21 @@ export async function POST(request: Request) {
     // Extract form fields
     const name = formData.get('name') as string;
     const description = formData.get('description') as string;
-    const price = formData.get('price') as string;
+    const basePrice = formData.get('basePrice') as string;
     const isFeatured = formData.get('isFeatured') === 'true';
     const isAvailable = formData.get('isAvailable') === 'true';
     const category = formData.get('category') as string;
     const ingredients = formData.get('ingredients') as string;
     const allergens = formData.get('allergens') as string;
+    const unitType = formData.get('unitType') as string;
+    const minQuantity = parseInt(formData.get('minQuantity') as string);
+    const maxQuantity = parseInt(formData.get('maxQuantity') as string);
+    const unitsJson = formData.get('units') as string;
+    const recipeDataJson = formData.get('recipeData') as string;
     const imageFiles = formData.getAll('images') as File[];
 
     // Validate required fields
-    if (!name || !description || !price) {
+    if (!name || !description || !basePrice || !unitType || isNaN(minQuantity) || isNaN(maxQuantity)) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -57,21 +62,41 @@ export async function POST(request: Request) {
     const { urls } = await uploadResponse.json();
     const primaryImageUrl = urls[0]; // Use first image as primary
 
+    // Parse units and recipe data
+    const units = unitsJson ? JSON.parse(unitsJson) : [];
+    const recipeData = recipeDataJson ? JSON.parse(recipeDataJson) : null;
+
     // Create product in database
     const newProduct = await db.insert(products).values({
       name,
       description,
-      basePrice: price.toString(),
+      basePrice: basePrice.toString(),
       imageUrl: primaryImageUrl,
       isFeatured: isFeatured || false,
       isAvailable: isAvailable !== false,
       category: category || 'cookies',
       ingredients: ingredients || '',
       allergens: allergens || '',
-      unitType: 'individual',
-      minQuantity: 1,
-      maxQuantity: 100,
+      unitType: unitType,
+      minQuantity: minQuantity,
+      maxQuantity: maxQuantity,
+      recipeData: recipeData ? JSON.stringify(recipeData) : null,
     }).returning();
+
+    // Insert product units
+    if (newProduct.length > 0 && units.length > 0) {
+      const productId = newProduct[0].id;
+      const unitValues = units.map(unit => ({
+        productId,
+        name: unit.name,
+        quantity: unit.quantity,
+        price: unit.price.toString(),
+        isDefault: unit.isDefault,
+        isAvailable: true,
+        sortOrder: 0,
+      }));
+      await db.insert(productUnits).values(unitValues);
+    }
 
     // Sync with Stripe
     try {
